@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XXL-JOB 2.3.0 → 3.3.0 升级与 Docker 部署指南</title>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --card: #ffffff;
+    --ink: #1f2430;
+    --muted: #6b7280;
+    --accent: #2563eb;
+    --accent-dark: #1d4ed8;
+    --border: #e5e7eb;
+    --code-bg: #0f172a;
+    --code-ink: #e2e8f0;
+    --green: #16a34a;
+    --amber: #b45309;
+    --amber-bg: #fffbeb;
+    --red: #dc2626;
+    --red-bg: #fef2f2;
+    --blue-bg: #eff6ff;
+    --green-bg: #f0fdf4;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.7;
+    font-size: 15px;
+  }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 0 20px 80px; }
+
+  header.hero {
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #3b82f6 100%);
+    color: #fff;
+    padding: 44px 20px 38px;
+  }
+  header.hero .inner { max-width: 1000px; margin: 0 auto; }
+  header.hero h1 { margin: 0 0 10px; font-size: 28px; font-weight: 700; letter-spacing: .5px; }
+  header.hero p { margin: 0; opacity: .92; font-size: 15px; }
+  .badges { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .badge {
+    background: rgba(255,255,255,.15);
+    border: 1px solid rgba(255,255,255,.3);
+    padding: 3px 12px; border-radius: 999px; font-size: 12.5px;
+  }
+
+  .toc {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 22px 26px; margin: 24px 0;
+  }
+  .toc h2 { margin: 0 0 12px; font-size: 15px; color: var(--accent-dark); text-transform: uppercase; letter-spacing: 1px; }
+  .toc ol { margin: 0; padding-left: 20px; columns: 2; column-gap: 40px; }
+  .toc li { margin: 4px 0; }
+  .toc a { color: var(--ink); text-decoration: none; }
+  .toc a:hover { color: var(--accent); text-decoration: underline; }
+
+  section.card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 28px 32px; margin: 24px 0;
+  }
+  h2 { font-size: 21px; margin: 0 0 16px; padding-bottom: 10px; border-bottom: 2px solid var(--border); }
+  h2 .num { color: var(--accent); margin-right: 8px; }
+  h3 { font-size: 16.5px; margin: 26px 0 10px; color: var(--ink); }
+  h4 { font-size: 14.5px; margin: 18px 0 8px; }
+  p { margin: 10px 0; }
+  strong { font-weight: 600; }
+  code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 13px; background: #eef2f7; color: #b91c1c; padding: 1px 6px; border-radius: 4px;
+  }
+  pre {
+    background: var(--code-bg); color: var(--code-ink); border-radius: 10px;
+    padding: 16px 18px; overflow-x: auto; font-size: 13px; line-height: 1.6; margin: 14px 0;
+  }
+  pre code { background: transparent; color: inherit; padding: 0; font-size: 13px; }
+  pre .c { color: #64748b; }      /* comment */
+  pre .k { color: #7dd3fc; }      /* keyword/attr */
+  pre .s { color: #86efac; }      /* string */
+
+  table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 13.5px; }
+  th, td { border: 1px solid var(--border); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: #f1f5f9; font-weight: 600; white-space: nowrap; }
+  tr:nth-child(even) td { background: #fafbfc; }
+
+  .note, .warn, .danger, .ok { border-radius: 8px; padding: 12px 16px; margin: 14px 0; border-left: 4px solid; font-size: 14px; }
+  .note { background: var(--blue-bg); border-color: var(--accent); }
+  .warn { background: var(--amber-bg); border-color: #f59e0b; }
+  .danger { background: var(--red-bg); border-color: var(--red); }
+  .ok { background: var(--green-bg); border-color: var(--green); }
+  .note b, .warn b, .danger b, .ok b { display: inline-block; margin-bottom: 2px; }
+
+  ul, ol { padding-left: 22px; }
+  li { margin: 5px 0; }
+
+  .checklist li { list-style: none; position: relative; padding-left: 26px; }
+  .checklist li::before { content: "▢"; position: absolute; left: 0; color: var(--accent); font-size: 16px; }
+
+  footer { text-align: center; color: var(--muted); font-size: 12.5px; margin-top: 40px; }
+  @media (max-width: 700px) { .toc ol { columns: 1; } }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="inner">
+    <h1>XXL-JOB 2.3.0 → 3.3.0 升级与 Docker 部署指南</h1>
+    <p>涵盖数据库迁移、代码升级、Docker 部署配置、以及升级过程中遇到的常见问题排查。</p>
+    <div class="badges">
+      <span class="badge">XXL-JOB 3.3.0</span>
+      <span class="badge">Spring Boot 3.5.8</span>
+      <span class="badge">JDK 17</span>
+      <span class="badge">MySQL 8.0</span>
+      <span class="badge">Docker Compose</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <nav class="toc">
+    <h2>目录</h2>
+    <ol>
+      <li><a href="#overview">升级概述与兼容性结论</a></li>
+      <li><a href="#db">数据库迁移</a></li>
+      <li><a href="#code">代码升级（admin + 执行器）</a></li>
+      <li><a href="#docker">Docker 部署配置</a></li>
+      <li><a href="#verify">部署验证清单</a></li>
+      <li><a href="#faq">常见问题排查</a></li>
+    </ol>
+  </nav>
+
+  <!-- ============ 1. 概述 ============ -->
+  <section class="card" id="overview">
+    <h2><span class="num">1</span>升级概述与兼容性结论</h2>
+    <p>从 <strong>2.3.0</strong> 直接升级到 <strong>3.3.0</strong> 属于<strong>跨大版本迁移，不能无缝升级</strong>。核心差异如下：</p>
+    <table>
+      <thead><tr><th>变更点</th><th>2.3.x</th><th>3.3.0</th><th>影响</th></tr></thead>
+      <tbody>
+        <tr><td>JDK</td><td>JDK 8 起步</td><td><strong>JDK 17+</strong></td><td>服务器、执行器都要换 JDK 17</td></tr>
+        <tr><td>Spring Boot</td><td>2.x（<code>javax.*</code>）</td><td><strong>3.x（<code>jakarta.*</code>）</strong></td><td>自定义代码里 <code>javax.servlet</code> 等包需改为 <code>jakarta.*</code></td></tr>
+        <tr><td>数据库结构</td><td>旧 <code>tables.sql</code></td><td><strong><code>xxl_job_user</code> 表结构变更</strong></td><td>需 ALTER 或重建，详见第 2 节</td></tr>
+        <tr><td>密码哈希</td><td>MD5（32 位）</td><td><strong>SHA-256（64 位）</strong></td><td>旧密码无法登录，需重置</td></tr>
+        <tr><td>admin↔executor 协议</td><td>旧协议（<code>ReturnT</code>）</td><td><strong>新协议（<code>Response</code> + 强制 token 头）</strong></td><td>执行器必须同步升级到 3.3.0</td></tr>
+      </tbody>
+    </table>
+    <div class="danger"><b>⚠ 关键结论</b>：2.3.0 的 admin 与执行器都要一起升到 3.3.0；数据库 <code>xxl_job_user</code> 表要加 <code>token</code> 列并改密码哈希。官方文档中"2.4.* 可无缝升级"仅指 2.x 线内部，不适用于 2.3 → 3.x。</div>
+    <div class="note"><b>关于 CVE</b>：本次升级修复的 <code>CVE-2022-36157</code>、<code>CVE-2022-43183</code> 在 <strong>2.3.1</strong> 即已修复；若只为修 CVE，升级到 2.x 线最后一个版本 2.4.2 也可。本指南按升级到 3.3.0 编写。</div>
+  </section>
+
+  <!-- ============ 2. 数据库 ============ -->
+  <section class="card" id="db">
+    <h2><span class="num">2</span>数据库迁移</h2>
+    <p>3.3.0 只有 <code>xxl_job_user</code> 这一张表有变化（其余 job_info / log / registry / lock 等兼容）：</p>
+    <table>
+      <thead><tr><th>差异点</th><th>2.3 老表</th><th>3.3.0 新表</th></tr></thead>
+      <tbody>
+        <tr><td><code>token</code> 列</td><td>无</td><td><code>varchar(100) DEFAULT NULL</code>（登录 token）</td></tr>
+        <tr><td><code>password</code> 长度</td><td><code>varchar(50)</code></td><td><code>varchar(100)</code></td></tr>
+        <tr><td>密码哈希算法</td><td>MD5</td><td>SHA-256</td></tr>
+      </tbody>
+    </table>
+
+    <h3>2.1 老库增量 ALTER（保留数据，推荐）</h3>
+<pre><code><span class="c">-- 1) 新增 token 列</span>
+ALTER TABLE `xxl_job_user`
+  ADD COLUMN `token` varchar(100) DEFAULT NULL COMMENT '登录token' AFTER `password`;
+
+<span class="c">-- 2) 加宽 password（SHA-256 是 64 位）</span>
+ALTER TABLE `xxl_job_user`
+  MODIFY COLUMN `password` varchar(100) NOT NULL COMMENT '密码加密信息';
+
+<span class="c">-- 3) 重置 admin 密码为 123456（3.x 用 SHA-256 存储）</span>
+UPDATE `xxl_job_user`
+SET `password` = '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92'
+WHERE `username` = 'admin';</code></pre>
+    <p><code>8d969eef...c6c92</code> 即 <code>SHA-256("123456")</code>，与 3.3.0 脚本里默认 admin 密码一致。</p>
+
+    <h3>2.2 备份与回滚</h3>
+<pre><code><span class="c">-- 升级前备份（保存原始 MD5 密码）</span>
+CREATE TABLE xxl_job_user_bak_23 AS SELECT * FROM xxl_job_user;
+
+<span class="c">-- 需要回滚 2.3 时：恢复密码为原 MD5 值（token 列可留可删，2.3 不理会）</span>
+UPDATE xxl_job_user u
+JOIN xxl_job_user_bak_23 b ON u.id = b.id
+SET u.password = b.password;</code></pre>
+    <div class="warn"><b>⚠ 回滚提示</b>：改完 SHA-256 后，老 2.3 无法用同一套密码登录（2.3 用 MD5 比对）。所以 2.3 和 3.3 <strong>不要同时指向同一个库的同一批账号</strong>。</div>
+
+    <h3>2.3 全新部署建库脚本</h3>
+<pre><code>CREATE database if NOT EXISTS `xxl_job` default character set utf8mb4 collate utf8mb4_unicode_ci;
+use `xxl_job`;
+<span class="c">-- ... 粘贴 3.3.0 的 tables_xxl_job.sql 全部内容（已含 token 列 / SHA-256 密码）...</span></code></pre>
+    <div class="note"><b>库名可自定义</b>：若用 <code>yuncheng_xxljob</code> 等自定义库名，只需保证「JDBC URL 里的库名 = 建表脚本 <code>use</code> 的库名 = 实际存在的库」三者一致。mysql 镜像 <code>MYSQL_DATABASE</code> 默认只建 <code>yuncheng_nacos</code>，xxl_job 库要靠 <code>mysql/init/</code> 初始化脚本建。</div>
+  </section>
+
+  <!-- ============ 3. 代码 ============ -->
+  <section class="card" id="code">
+    <h2><span class="num">3</span>代码升级（admin + 执行器）</h2>
+
+    <h3>3.1 版本号统一到 3.3.0</h3>
+<pre><code>&lt;xxl-job.version&gt;3.3.0&lt;/xxl-job.version&gt;</code></pre>
+    <p>好消息：<code>XxlJobSpringExecutor</code>（<code>com.xxl.job.core.executor.impl.XxlJobSpringExecutor</code>）和 <code>@XxlJob</code>（<code>com.xxl.job.core.handler.annotation.XxlJob</code>）包路径在 3.3.0 未变，代码几乎不用改。</p>
+
+    <h3>3.2 执行器配置类补 accessToken（关键）</h3>
+    <p>升级后必须给执行器设置 <code>accessToken</code>，否则注册会被 3.3.0 admin 拒绝（见 6.4）：</p>
+<pre><code>@Value("${xxl.job.accessToken}")
+private String accessToken;
+
+@Bean
+public XxlJobSpringExecutor xxlJobExecutor() {
+    XxlJobSpringExecutor xxlJobSpringExecutor = new XxlJobSpringExecutor();
+    xxlJobSpringExecutor.setAdminAddresses(adminAddresses);
+    xxlJobSpringExecutor.setAccessToken(accessToken);   <span class="c">// ← 新增</span>
+    xxlJobSpringExecutor.setAppname(appname);
+    xxlJobSpringExecutor.setPort(port);
+    xxlJobSpringExecutor.setLogRetentionDays(logRetentionDays);
+    return xxlJobSpringExecutor;
+}</code></pre>
+
+    <h3>3.3 执行器 Nacos 配置补 accessToken</h3>
+<pre><code>xxl:
+  job:
+    admin:
+      addresses: http://192.168.1.244:8080/xxl-job-admin
+    accessToken: default_token      <span class="c"># ← 新增，与 admin 一致</span>
+    executor:
+      appname: xxl-job-executor-sample
+      port: 9999
+      logretentiondays: 3</code></pre>
+    <div class="warn"><b>⚠ 一致性</b>：admin 与<strong>所有执行器</strong>的 accessToken 必须一致；不改默认就是 <code>default_token</code>（能跑但不安全，建议换成随机长 token）。</div>
+  </section>
+
+  <!-- ============ 4. Docker ============ -->
+  <section class="card" id="docker">
+    <h2><span class="num">4</span>Docker 部署配置</h2>
+
+    <h3>4.1 docker-compose（xxljob 服务）</h3>
+<pre><code>  <span class="c"># ========== XXL-Job ==========</span>
+  xxljob:
+    image: eclipse-temurin:17-jre        <span class="c"># 3.3.0 需要 JDK17</span>
+    container_name: xxljob
+    restart: unless-stopped
+    networks:
+      - esafe-net
+    ports:
+      - "${XXL_JOB_PORT:-8080}:8080"
+    env_file:
+      - .env
+    environment:
+      TZ: Asia/Shanghai
+      JVM_OPTS: &gt;
+        ${JVM_COMMON_OPTS}
+        ${JVM_COMMON_DSYSTEM}
+        -Dspring.config.additional-location=file:/app/config/application.properties
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306                   <span class="c"># 容器网络内固定 3306</span>
+      MYSQL_DB: ${XXL_JOB_MYSQL_DATABASE:-xxl_job}
+      MYSQL_USER: ${XXL_JOB_MYSQL_USER:-root}
+      MYSQL_PWD: ${XXL_JOB_MYSQL_PASSWORD:-${MYSQL_ROOT_PASSWORD}}
+      XXL_JOB_LOG_RETENTION_DAYS: ${XXL_JOB_LOG_RETENTION_DAYS:-30}
+    volumes:
+      - ${ESAFE_HOME}/jar/xxl-job/xxl-job-admin-3.3.0.jar:/app/app.jar:ro
+      - ${ESAFE_HOME}/jar/xxl-job/application.properties:/app/config/application.properties:ro
+      - ${ESAFE_HOME}/logs/xxl-job:/data/applogs          <span class="c"># 应用日志</span>
+      - ${ESAFE_HOME}/logs/xxl-job/jvm:/data/logs/jvm     <span class="c"># JVM GC/错误日志</span>
+    command: ["sh", "-c", "exec java $${JVM_OPTS} -jar /app/app.jar"]
+    depends_on:
+      mysql:
+        condition: service_healthy</code></pre>
+    <div class="warn"><b>⚠ 注意点</b>：
+      <ul>
+        <li>缩进必须与其它服务一致（<code>xxljob:</code> 缩进 2 格）。</li>
+        <li>镜像必须是 JDK17；<code>JVM_COMMON_OPTS_8</code> 这类 Java8 参数不能用。</li>
+        <li>配置加载用 <code>-Dspring.config.additional-location=...</code>，<strong>不要</strong>用 <code>-Dxxl.job.config.location</code>（无效参数）。</li>
+        <li>xxl-job-admin 不依赖 Redis，<code>REDIS_*</code> 和 <code>depends_on: redis</code> 可删。</li>
+      </ul>
+    </div>
+
+    <h3>4.2 外部 application.properties（挂载到 /app/config/）</h3>
+<pre><code><span class="c">### web</span>
+server.port=8080
+server.servlet.context-path=/xxl-job-admin
+
+<span class="c">### actuator</span>
+management.endpoints.web.base-path=/actuator
+management.health.mail.enabled=false
+
+<span class="c">### mybatis</span>
+mybatis.mapper-locations=classpath:/mapper/*Mapper.xml
+
+<span class="c">### datasource-pool</span>
+spring.datasource.type=com.zaxxer.hikari.HikariDataSource
+spring.datasource.hikari.minimum-idle=10
+spring.datasource.hikari.maximum-pool-size=30
+spring.datasource.hikari.auto-commit=true
+spring.datasource.hikari.idle-timeout=30000
+spring.datasource.hikari.pool-name=HikariCP
+spring.datasource.hikari.max-lifetime=900000
+spring.datasource.hikari.connection-timeout=10000
+spring.datasource.hikari.connection-test-query=SELECT 1
+
+<span class="c">### datasource（环境变量注入）</span>
+spring.datasource.url=jdbc:mysql://${MYSQL_HOST:mysql}:${MYSQL_PORT:3306}/${MYSQL_DB:xxl_job}?useUnicode=true&amp;characterEncoding=UTF-8&amp;autoReconnect=true&amp;serverTimezone=Asia/Shanghai
+spring.datasource.username=${MYSQL_USER:root}
+spring.datasource.password=${MYSQL_PWD:}
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+<span class="c">### access token</span>
+xxl.job.accessToken=${XXL_JOB_ACCESS_TOKEN:default_token}
+
+<span class="c">### timeout / i18n / trigger pool</span>
+xxl.job.timeout=${XXL_JOB_TIMEOUT:3}
+xxl.job.i18n=zh_CN
+xxl.job.triggerpool.fast.max=300
+xxl.job.triggerpool.slow.max=200
+
+<span class="c">### log retention days（最小 3 天，&lt;3 会关闭日志清理）</span>
+xxl.job.logretentiondays=${XXL_JOB_LOG_RETENTION_DAYS:30}</code></pre>
+
+    <h3>4.3 .env 变量</h3>
+<pre><code><span class="c">### XXL-Job</span>
+XXL_JOB_PORT=8080
+XXL_JOB_MYSQL_DATABASE=xxl_job
+XXL_JOB_MYSQL_USER=root
+XXL_JOB_MYSQL_PASSWORD=xxxxxx
+XXL_JOB_LOG_RETENTION_DAYS=30            <span class="c"># 必须 &gt;=3，否则关闭日志清理</span>
+XXL_JOB_ACCESS_TOKEN=替换成随机token      <span class="c"># 可选，但强烈建议，勿用 default_token</span></code></pre>
+    <div class="note"><b>env 注入机制</b>：服务有 <code>env_file: .env</code> 时，<code>.env</code> 里所有变量会整体注入容器，<strong>无需在 <code>environment:</code> 里逐条列出</strong>。外部 <code>application.properties</code> 用 <code>${VAR:default}</code> 显式占位符即可解析。</div>
+  </section>
+
+  <!-- ============ 5. 验证 ============ -->
+  <section class="card" id="verify">
+    <h2><span class="num">5</span>部署验证清单</h2>
+    <ul class="checklist">
+      <li>数据库 <code>xxl_job_user</code> 已加 <code>token</code> 列、<code>password</code> 加宽、admin 密码改为 SHA-256。</li>
+      <li>admin 与所有执行器版本统一为 3.3.0，运行环境 JDK 17。</li>
+      <li>执行器代码已 <code>setAccessToken(...)</code>，Nacos 配置已加 <code>xxl.job.accessToken</code>（与 admin 一致）。</li>
+      <li>compose 缩进正确、镜像为 <code>eclipse-temurin:17-jre</code>、用 <code>spring.config.additional-location</code> 加载外部配置。</li>
+      <li>启动日志出现 <code>HikariCP - Start completed</code> + <code>Tomcat started on port 8080</code>。</li>
+      <li>admin 控制台用 <code>admin/123456</code> 登录成功，并立即改强密码。</li>
+      <li>「执行器管理」中执行器显示<strong>在线</strong>，无 <code>MissingRequestHeaderException</code> 告警。</li>
+      <li>触发一次任务，执行器正常执行并回调结果。</li>
+    </ul>
+  </section>
+
+  <!-- ============ 6. FAQ ============ -->
+  <section class="card" id="faq">
+    <h2><span class="num">6</span>常见问题排查</h2>
+
+    <h3>6.1 Maven 构建报 GPG 签名错误</h3>
+<pre><code><span class="c">Could not determine gpg version</span></code></pre>
+    <p>xxl-job 的 pom 配了 maven-gpg-plugin 用于发布签名，本地构建不需要：</p>
+<pre><code>mvn clean install -Dgpg.skip=true -Dmaven.javadoc.skip=true -DskipTests</code></pre>
+    <p>IDEA 里加到 <strong>Run Configuration 的 Command line</strong> 框；或直接在根 pom 的 <code>&lt;properties&gt;</code> 加 <code>&lt;gpg.skip&gt;true&lt;/gpg.skip&gt;</code>。</p>
+
+    <h3>6.2 登录报 Unknown column 't.token'</h3>
+<pre><code><span class="c">Unknown column 't.token' in 'field list' ... FROM xxl_job_user</span></code></pre>
+    <p>说明数据库还是 2.3 老结构，缺 <code>token</code> 列。执行第 2.1 节的 ALTER + 重置密码即可。</p>
+
+    <h3>6.3 执行器触发报 Connect timed out（172.18.0.16:9999）</h3>
+<pre><code><span class="c">trigger error, please check if the executor[http://172.18.0.16:9999/] is running</span></code></pre>
+    <p>这是执行器用 Docker 内网 IP 注册、调度中心（宿主机/IDEA）无法路由导致的网络问题。修复：执行器用宿主机可达 IP 注册（<code>xxl.job.executor.ip</code> 或 <code>xxl.job.executor.address</code> 显式指定），并映射 9999 端口；或 admin 与执行器放同一 Docker 网络。</p>
+
+    <h3>6.4 一直刷 MissingRequestHeaderException</h3>
+<pre><code><span class="c">Required request header 'XXL-JOB-ACCESS-TOKEN' ... is not present</span></code></pre>
+    <p>3.3.0 admin 的 <code>/api/registry</code>、<code>/api/callback</code> 强制要求 <code>XXL-JOB-ACCESS-TOKEN</code> 请求头；执行器没配 accessToken 导致注册被拒。修复见第 3.2、3.3 节：执行器补 accessToken，与 admin 一致。</p>
+
+    <h3>6.5 logretentiondays 设了但"不生效"</h3>
+    <p>官方限制：<code>xxl.job.logretentiondays</code> <strong>≥ 3 才生效</strong>；小于 3 时代码返回 -1（关闭日志清理），日志反而越积越多。另外该值指<strong>调度中心 <code>xxl_job_log</code> 表</strong>的清理天数（执行器本地日志文件是 <code>xxl.job.executor.logretentiondays</code>，同样最小 3 天）。</p>
+  </section>
+
+  <footer>XXL-JOB 升级部署指南 · 整理于 2026-10-16 · 供内部运维/开发参考</footer>
+</div>
+
+</body>
+</html>
